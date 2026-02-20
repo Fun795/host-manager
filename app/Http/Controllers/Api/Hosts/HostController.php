@@ -14,8 +14,6 @@ class HostController extends Controller
 {
     public function __construct(HostService $hostService)
     {
-        parent::__construct();
-
         $this->hostService = $hostService;
     }
 
@@ -33,3 +31,10 @@ class HostController extends Controller
         return $this->sendSuccessPaginated(HostResource::collection($result));
     }
 
+    public function rename($hostId, RenameHostRequest $request): JsonResponse
+    {
+        $result = $this->hostService->rename($hostId, $request->validated());
+
+        return $this->sendSuccessAccepted(['operation_id' => $result->id]);
+    }
+}

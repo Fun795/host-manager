@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\OperationStatusEnum;
+use App\Jobs\RenameHostJob;
 use App\Models\Host;
 use App\Models\Operation;
 use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class HostService
@@ -50,3 +53,33 @@ class HostService
         }
     }
 
+    public function rename(string $hostId, array $data): Operation
+    {
+        $existingOperation = Operation::with('host')
+            ->where('idempotency_key', $data['header_idempotency_key'])
+            ->first();
+
+        if ($existingOperation) {
+            return $existingOperation;
+        }
+
+        $host = Host::findOrFail($hostId);
+
+        if ($host->hostname === $data['new_hostname']) {
+            throw new ConflictHttpException('Этот hostname уже используется');
+        }
+
+        $operation = Operation::create(
+            [
+                'status' => OperationStatusEnum::PENDING->value,
+                'type' => 'rename',
+                'host_id' => $host->id,
+                'payload' => Arr::except($data, 'header_idempotency_key'),
+                'idempotency_key' => $data['header_idempotency_key'],
+            ]
+        );
+
+        RenameHostJob::dispatch($operation->id);
+        return $operation;
+    }
+}
