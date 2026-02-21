@@ -1,9 +1,13 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -15,9 +19,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'ability' => CheckForAnyAbility::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Ошибка аутентификации
+        $exceptions->renderable(function (AuthenticationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 401);
+        });
+
+        // Ошибка авторизации
+        $exceptions->renderable(function (AccessDeniedHttpException $e) {
+            return response()->json([
+                'message' => 'Недостаточно прав',
+            ], 403);
+        });
+
         // Ресурс не найден
         $exceptions->renderable(function (NotFoundHttpException $e) {
             return response()->json([
