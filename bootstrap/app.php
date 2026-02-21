@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RateLimiter;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'ability' => CheckForAnyAbility::class,
+            'rate-limiter' => RateLimiter::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -58,6 +60,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
             ], $e->status);
+        });
+
+        // Ограничение на количество запросов
+        $exceptions->renderable(function (ThrottleRequestsException $e) {
+            return response()->json([
+                'message' => !empty($e->getMessage()) ? $e->getMessage() : 'Слишком много запросов, попробуйте позже',
+            ], 429);
         });
 
         //Другие непредвиденные ошибки

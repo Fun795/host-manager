@@ -12,7 +12,8 @@ Route::prefix('hosts')
         Route::whereUuid('hostId')
             ->middleware([
                 'auth:sanctum',
-                'ability:rename-host'
+                'ability:rename-host',
+                'rate-limiter'
             ])->patch('/{hostId}/rename', [HostController::class, 'rename']);
     });
 
