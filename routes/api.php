@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Hosts\HostController;
+use App\Http\Controllers\Api\Operations\OperationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('hosts')
@@ -9,5 +10,11 @@ Route::prefix('hosts')
         Route::get('/', [HostController::class, 'list']);
         Route::whereUuid('hostId')
             ->patch('/{hostId}/rename', [HostController::class, 'rename']);
+    });
+
+Route::prefix('operations')
+    ->group(function () {
+        Route::whereUuid('operationId')
+            ->get('/{operationId}', [OperationController::class, 'getById']);
     });
 

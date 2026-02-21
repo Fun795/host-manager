@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use App\Observers\OperationObserver;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Operation extends Model
 {
@@ -26,8 +25,8 @@ class Operation extends Model
         'payload' => 'array',
     ];
 
-    public function host(): HasOne
+    public function host(): BelongsTo
     {
-        return $this->hasOne(Host::class, 'id', 'host_id');
+        return $this->belongsTo(Host::class, 'host_id', 'id');
     }
 }

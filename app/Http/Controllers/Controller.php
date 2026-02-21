@@ -6,6 +6,16 @@ use Illuminate\Http\JsonResponse;
 
 abstract class Controller
 {
+    public function sendSuccess($data = [], $message = null): JsonResponse
+    {
+        $responseBody = array_merge(
+            array_filter(['message' => $message]),
+            ['data' => $data]
+        );
+
+        return response()->json($responseBody);
+    }
+
     public function sendSuccessCreated($data = [], $message = null): JsonResponse
     {
         $responseBody = array_merge(
