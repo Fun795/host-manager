@@ -55,7 +55,7 @@ class HostService
 
     public function rename(string $hostId, array $data): Operation
     {
-        $existingOperation = Operation::with('host')
+        $existingOperation = Operation::query()
             ->where('idempotency_key', $data['header_idempotency_key'])
             ->first();
 
@@ -79,7 +79,7 @@ class HostService
             ]
         );
 
-        RenameHostJob::dispatch($operation->id);
+        RenameHostJob::dispatch($data['header_idempotency_key']);
         return $operation;
     }
 }
