@@ -21,6 +21,4 @@ class Host extends Model
     protected $casts = [
         'tags' => 'array',
     ];
-
-    public function options(): BelongsTo
-    {
+}

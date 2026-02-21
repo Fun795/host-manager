@@ -19,7 +19,7 @@ class OperationController extends Controller
         $this->operationService = $operationService;
     }
 
-    public function getById(string $id): JsonResponse
+    public function get(string $id): JsonResponse
     {
         $result = $this->operationService->getById($id);
 
