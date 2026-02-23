@@ -43,8 +43,8 @@ abstract class Controller
                 'items' => $paginatedData->items(),
                 'page' => [
                     'size' => $paginatedData->perPage(),
-                    'previous_url' => $paginatedData->previousPageUrl(),
-                    'next_url' => $paginatedData->nextPageUrl(),
+                    'previous' => $paginatedData->previousCursor()?->encode(),
+                    'next' => $paginatedData->nextCursor()?->encode(),
                 ]
             ],
         ]);
