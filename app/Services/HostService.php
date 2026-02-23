@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\OperationStatusEnum;
+use App\Enums\OperationTypeEnum;
 use App\Jobs\RenameHostJob;
 use App\Models\Host;
 use App\Models\Operation;
@@ -64,15 +65,19 @@ class HostService
         }
 
         $host = Host::findOrFail($hostId);
+        $exists = Host::where('hostname', $data['new_hostname'])
+            ->select('hostname')
+            ->where('id', '!=', $host->id)
+            ->exists();
 
-        if ($host->hostname === $data['new_hostname']) {
+        if ($exists) {
             throw new ConflictHttpException('Этот hostname уже используется');
         }
 
         $operation = Operation::create(
             [
                 'status' => OperationStatusEnum::PENDING->value,
-                'type' => 'rename',
+                'type' => OperationTypeEnum::RENAME->value,
                 'host_id' => $host->id,
                 'payload' => Arr::except($data, 'header_idempotency_key'),
                 'idempotency_key' => $data['header_idempotency_key'],

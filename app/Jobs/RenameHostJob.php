@@ -3,14 +3,13 @@
 namespace App\Jobs;
 
 use App\Enums\OperationStatusEnum;
+use App\Exceptions\UnrecoverableJobException;
 use App\Models\Host;
 use App\Models\Operation;
 use App\Services\LogService;
-use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class RenameHostJob implements ShouldQueue
@@ -28,54 +27,51 @@ class RenameHostJob implements ShouldQueue
     {
         $logService = $logger->withContext(['idempotency_key' => $this->idempotencyKey]);
 
-        DB::transaction(function () use ($logService) {
-            $operation = Operation::where('idempotency_key', $this->idempotencyKey)
-                ->lockForUpdate()
-                ->first();
+        try {
+            DB::transaction(function () use ($logService) {
+                ($this->attempts() && $this->attempts() > 1) ?
+                    $logService->warning("Повторная попытка ({$this->attempts()}) переименовать host") :
+                    $logService->info('Старт Job переименования host');
 
-            if (!$operation) {
-                return;
-            }
-            ($this->attempts() && $this->attempts() > 1) ?
-                $logService->warning("Повторная попытка ({$this->attempts()}) переименовать host") :
-                $logService->info('Старт Job переименования host');
+                $operation = Operation::where('idempotency_key', $this->idempotencyKey)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (!in_array($operation->status, [OperationStatusEnum::PENDING->value, OperationStatusEnum::PROCESSING->value], true)) {
-                $logService->info('Job прекращена, операция выполнена ранее');
-                return;
-            }
+                if (!$operation) {
+                    throw new UnrecoverableJobException('Операция переименования не найдена');
+                }
 
-            $operation->update(['status' => OperationStatusEnum::PROCESSING->value]);
-            $host = Host::where('id', $operation->host_id)
-                ->lockForUpdate()
-                ->first();
+                if (!in_array($operation->status, [OperationStatusEnum::PENDING->value, OperationStatusEnum::PROCESSING->value], true)) {
+                    $logService->info('Операция выполнена ранее', ['idempotency_key' => $this->idempotencyKey]);
+                    return;
+                }
 
-            if (!$host) {
-                $logService->error('Не найден связанный host', ['host_id' => $operation->host_id]);
-                return;
-            }
+                $operation->update(['status' => OperationStatusEnum::PROCESSING->value]);
+                $host = Host::where('id', $operation->host_id)
+                    ->lockForUpdate()
+                    ->first();
 
-            $newHostname = $operation->payload['new_hostname'];
-            $exists = Host::where('hostname', $newHostname)
-                ->where('id', '!=', $host->id)
-                ->exists();
+                $newHostname = $operation->payload['new_hostname'];
+                $exists = Host::where('hostname', $newHostname)
+                    ->where('id', '!=', $host->id)
+                    ->exists();
 
-            if ($exists) {
-                $logService->error('Такой hostname уже используется', [
-                    'host_id' => $operation->host_id,
-                    'new_hostname' => $newHostname
+                if ($exists) {
+                    throw new UnrecoverableJobException('Такой hostname уже используется');
+                }
+
+                $host->update(['hostname' => $newHostname]);
+                $operation->update([
+                    'status' => OperationStatusEnum::DONE->value,
+                    'error' => null,
                 ]);
-                return;
-            }
 
-            $host->update(['hostname' => $newHostname]);
-            $operation->update([
-                'status' => OperationStatusEnum::DONE->value,
-                'error' => null,
-            ]);
-        });
-
-        DB::afterCommit(fn() => $logService->info('Переименование прошло успешно!'));
+                $logService->info('Переименование прошло успешно!');
+            });
+        } catch (UnrecoverableJobException $e) {
+            $this->failed($e);
+            return;
+        }
     }
 
     public function failed(Throwable $exception): void

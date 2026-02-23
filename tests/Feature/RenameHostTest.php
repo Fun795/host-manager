@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\OperationStatusEnum;
+use App\Enums\OperationTypeEnum;
 use App\Jobs\RenameHostJob;
 use App\Models\Host;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -156,7 +157,7 @@ class RenameHostTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('operations', [
-            'type' => 'rename',
+            'type' => OperationTypeEnum::RENAME->value,
             'status' => OperationStatusEnum::PENDING->value,
             'host_id' => $host->id,
         ]);
