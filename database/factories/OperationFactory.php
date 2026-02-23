@@ -2,6 +2,7 @@
 namespace Database\Factories;
 
 use App\Enums\OperationStatusEnum;
+use App\Enums\OperationTypeEnum;
 use App\Models\Host;
 use App\Models\Operation;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,7 +16,7 @@ class OperationFactory extends Factory
     {
         return [
             'id' => Str::uuid(),
-            'type' => 'rename',
+            'type' => OperationTypeEnum::RENAME->value,
             'status' => OperationStatusEnum::PENDING->value,
             'host_id' => Str::uuid()->toString(),
             'payload' => ['new_hostname' => fake()->domainName()],
