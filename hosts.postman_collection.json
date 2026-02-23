@@ -1,0 +1,304 @@
+{
+  "info": {
+    "_postman_id": "963d2769-0b70-458d-bd55-7b550fd7c62c",
+    "name": "hosts",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "19941907"
+  },
+  "item": [
+    {
+      "name": "Получить список хостов",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/api/hosts?q=App",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "hosts"
+          ],
+          "query": [
+            {
+              "key": "page%5Bafter%5D",
+              "value": "eyJpZCI6ImExMjA5OWYzLWM4MGMtNDY0NS1iYzY1LTY5MDQyMGVjYjY0ZCIsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0",
+              "disabled": true
+            },
+            {
+              "key": "page[size]",
+              "value": "1",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "q",
+              "value": "App"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Создать хост",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"hostname\": \"app-04\",\r\n    \"ip\": \"10.0.21.21\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/api/hosts",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "hosts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Запросить переименование",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "a1209f57-34b0-486e-a519-c9e13242ac23",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"new_hostname\": \"app-01-new\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/api/hosts/a122cee8-1973-40b1-b019-a5084384bbb9/rename",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "hosts",
+            "a122cee8-1973-40b1-b019-a5084384bbb9",
+            "rename"
+          ],
+          "query": [
+            {
+              "key": "new hostname",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Получить операцию по id",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "a1209f57-34b0-486e-a519-c9e13242ac09",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/api/operations/a122b9c4-9c11-4d6d-80a3-9eecc49bb462",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "operations",
+            "a122b9c4-9c11-4d6d-80a3-9eecc49bb462"
+          ],
+          "query": [
+            {
+              "key": "new hostname",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Получить токен",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();\r",
+              "\r",
+              "if (response.data.access_token) {\r",
+              "    pm.collectionVariables.set(\"access_token\", response.data.access_token);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "a1209f57-34b0-486e-a519-c9e13242ac09",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"admin\",\r\n    \"password\": \"password\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/api/auth",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "auth"
+          ],
+          "query": [
+            {
+              "key": "new hostname",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "api_url",
+      "value": "https://dev-api-service.erc-gkh.ru/lk-resident"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    }
+  ]
+}
