@@ -20,19 +20,21 @@ class RenameHostJobTest extends TestCase
         $this->instance(LogService::class, new LogService(null));
     }
 
-    private function jobHandle($idempotencyKey, $failed = false): void
+    private function executeJob($idempotencyKey): void
     {
         $job = (new RenameHostJob($idempotencyKey));
 
-        if ($failed) {
-            $job->failed(new \Exception('Test error'));
-        } else {
-            try {
-                $job->handle(app(LogService::class));
-            } catch (\Throwable $e) {
-                $job->failed($e);
-            }
+        try {
+            $job->handle(app(LogService::class));
+        } catch (\Throwable $e) {
+            $job->failed($e);
         }
+    }
+
+    private function failedJob($idempotencyKey): void
+    {
+        $job = (new RenameHostJob($idempotencyKey));
+        $job->failed(new \Exception('Test error'));
     }
 
     public function test_job_renames_host_successfully(): void
@@ -43,7 +45,7 @@ class RenameHostJobTest extends TestCase
             'payload' => ['new_hostname' => 'new-name'],
         ]);
 
-        $this->jobHandle($operation->idempotency_key);
+        $this->executeJob($operation->idempotency_key);
 
         $this->assertDatabaseHas('hosts', [
             'id' => $host->id,
@@ -67,7 +69,7 @@ class RenameHostJobTest extends TestCase
             'payload' => ['new_hostname' => 'existing-name'],
         ]);
 
-        $this->jobHandle($operation->idempotency_key);
+        $this->executeJob($operation->idempotency_key);
 
         // Хост не изменился
         $this->assertDatabaseHas('hosts', [
@@ -92,7 +94,7 @@ class RenameHostJobTest extends TestCase
             'payload' => ['new_hostname' => 'new-name'],
         ]);
 
-        $this->jobHandle($operation->idempotency_key);
+        $this->executeJob($operation->idempotency_key);
         $this->assertDatabaseHas('hosts', [
             'id' => $host->id,
             'hostname' => 'old-name', // не изменился
@@ -112,7 +114,7 @@ class RenameHostJobTest extends TestCase
             'status' => OperationStatusEnum::PROCESSING->value,
         ]);
 
-        $this->jobHandle($operation->idempotency_key, true);
+        $this->failedJob($operation->idempotency_key);
 
         $this->assertDatabaseHas('operations', [
             'id' => $operation->id,
