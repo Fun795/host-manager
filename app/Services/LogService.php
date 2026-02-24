@@ -13,6 +13,13 @@ class LogService
         protected string $channel = 'stack'
     ) {}
 
+    public function channel(string $channel): self
+    {
+        $new = clone $this;
+        $new->channel = $channel;
+        return $new;
+    }
+
     public function withContext(array $context): self
     {
         $new = clone $this;

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\LogChannelEnum;
 use App\Enums\OperationStatusEnum;
 use App\Exceptions\UnrecoverableJobException;
 use App\Models\Host;
@@ -25,7 +26,9 @@ class RenameHostJob implements ShouldQueue
 
     public function handle(LogService $logger): void
     {
-        $logService = $logger->withContext(['idempotency_key' => $this->idempotencyKey]);
+        $logService = $logger
+            ->channel(LogChannelEnum::OPERATIONS->value)
+            ->withContext(['idempotency_key' => $this->idempotencyKey]);
 
         try {
             DB::transaction(function () use ($logService) {
@@ -76,8 +79,10 @@ class RenameHostJob implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
-        $logger = app(LogService::class)->withContext(['idempotency_key' => $this->idempotencyKey]);
-        $logger->error('Ошибка во время выполнения Job переименования: ' . $exception->getMessage());
+        app(LogService::class)
+            ->channel(LogChannelEnum::OPERATIONS->value)
+            ->withContext(['idempotency_key' => $this->idempotencyKey])
+            ->error('Ошибка во время выполнения Job: ' . $exception->getMessage());
 
         Operation::where('idempotency_key', $this->idempotencyKey)->update([
             'status' => OperationStatusEnum::FAILED->value,
